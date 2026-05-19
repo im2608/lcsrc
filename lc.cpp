@@ -32,6 +32,8 @@
 
 using namespace std;
 
+// SSL 证书验证问题。可以临时禁用 SSL 验证来推送：
+// git - c http.sslVerify = false push - u origin main
 
 // 数组分割等和子集问题中的 dp 是一个二维数组 dp[i][j], i 是0 到物品的数量， j 是从 0 到希望取得的最大价值
 // dp[i][j] 表示的是 从 1 -- i 个的物品，能否取得 j 的价值。 取值为 true or false。它取值根据俩个情况：
@@ -15711,14 +15713,113 @@ void testconvertToBase7()
 }
 
 //https://leetcode.com/problems/roman-to-integer/description/
-int romanToInt(string s) 
+int romanToInt(string &s) 
 {
-	return 22;
+	unordered_map<char, int> romannum({
+		{'I', 1},
+		{'V', 5},
+		{'X', 10},
+		{'L', 50},
+		{'C', 100},
+		{'D', 500},
+		{'M', 1000},
+		});
+	/*
+	I can be placed before V(5) and X(10) to make 4 and 9.
+	X can be placed before L(50) and C(100) to make 40 and 90.
+	C can be placed before D(500) and M(1000) to make 400 and 900.
+	*/
+	int ret = 0;
+	int i = 0;
+	while (i < s.size())
+	{
+		switch (s[i])
+		{
+		case 'I':
+			if (i + 1 < s.size())
+			{
+				if (s[i + 1] == 'V')
+				{
+					ret += 4;
+					i++;
+				}
+				else if (s[i + 1] == 'X')
+				{
+					ret += 9;
+					i++;
+				}
+				else
+					ret += 1;				
+			}
+			else
+				ret += 1;
+		break;
+		case 'X':
+			if (i + 1 < s.size())
+			{
+				if (s[i + 1] == 'L')
+				{
+					ret += 40;
+					i++;
+				}
+				else if (s[i + 1] == 'C')
+				{
+					ret += 90;
+					i++;
+				}
+				else
+					ret += 10;				
+			}
+			else
+				ret += 10;
+		break;
+		case 'C':
+			if (i + 1 < s.size())
+			{
+				if (s[i + 1] == 'D')
+				{
+					ret += 400;
+					i++;
+				}
+				else if (s[i + 1] == 'M')
+				{
+					ret += 900;
+					i++;
+				}
+				else
+					ret += 100;
+			}
+			else
+				ret += 100;
+			break;
+		case 'V':
+			ret += 5;
+		break;
+		case 'L':
+			ret += 50;
+		break;
+		case 'D':
+			ret += 500;
+		break;
+		case 'M':
+			ret += 1000;
+		break;
+		}
+		i++;
+	}
+
+	return ret;
+}
+
+void testromanToInt()
+{
+	string s("MMMCC");
+	romanToInt(s);
 }
 
 int main()
 {	
-	testconvertToBase7();
+	testromanToInt();
 	return 0;
 }
 
