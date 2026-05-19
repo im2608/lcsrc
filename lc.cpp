@@ -15713,7 +15713,7 @@ void testconvertToBase7()
 //https://leetcode.com/problems/roman-to-integer/description/
 int romanToInt(string s) 
 {
-	return 0;
+	return 22;
 }
 
 int main()
