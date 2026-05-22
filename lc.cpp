@@ -33,7 +33,7 @@
 using namespace std;
 
 // SSL 证书验证问题。可以临时禁用 SSL 验证来推送：
-// git - c http.sslVerify = false push - u origin main
+// git -c http.sslVerify=false push -u origin main
 
 // 数组分割等和子集问题中的 dp 是一个二维数组 dp[i][j], i 是0 到物品的数量， j 是从 0 到希望取得的最大价值
 // dp[i][j] 表示的是 从 1 -- i 个的物品，能否取得 j 的价值。 取值为 true or false。它取值根据俩个情况：
@@ -3695,6 +3695,7 @@ vector<int> successfulPairs(vector<int>& spells, vector<int>& potions, long long
 			least_p++;
 
 		// 二分查找时， right = size - 1， 循环时判断 left 小于等于 right
+		// 循环结束时，left 指向第一个大于等于 target 的位置
 		// 注意: left, right 应该用 int，不要用 u_int，因为如果：
 		// m = (0 + 1)/2 = 0, 此时 u_int r = m -1 就会溢出
 		// 还可以直接用 lower_bound() 进行查找
@@ -6966,53 +6967,6 @@ vector<int> postorder(Node* root)
 	return ret;
 }
 
-//https://leetcode.com/problems/symmetric-tree/description/
-bool isSymmetric(TreeNode* root) 
-{
-	if (root == NULL || (root->left == NULL && root->right == NULL))
-		return true;
-
-	if ((root->left == NULL && root->right != NULL) || 
-		(root->left != NULL && root->right == NULL) ||
-		(root->left != NULL && root->right != NULL && root->left->val != root->right->val))
-		return false;
-
-	list<pair<TreeNode*, TreeNode*> > nodeList;
-	nodeList.push_back(pair<TreeNode*, TreeNode*>(root->left->left, root->right->right));
-	nodeList.push_back(pair<TreeNode*, TreeNode*>(root->left->right, root->right->left));
-	list<pair<TreeNode*, TreeNode*> >::iterator itor = nodeList.begin();
-	while (nodeList.size() > 0)
-	{
-		TreeNode* n1 = itor->first, *n2 = itor->second;
-		if (n1 == NULL && n2 == NULL)
-		{
-			itor = nodeList.erase(itor);
-			continue;
-		}
-		if ((n1 == NULL && n2 != NULL) ||
-			(n1 != NULL && n2 == NULL) ||
-			(n1->val != n2->val))
-			return false;
-
-		nodeList.push_back(pair<TreeNode*, TreeNode*>(n1->left, n2->right));
-		nodeList.push_back(pair<TreeNode*, TreeNode*>(n1->right, n2->left));
-
-		itor = nodeList.erase(itor);		
-	}
-
-	return true;
-}
-
-void testisSymmetric()
-{
-	vector<int> values({ 1,2,2,INT_MIN,3,INT_MIN,3 });
-	TreeNode **root = createTree(values);
-
-	isSymmetric(*root);
-
-	deleteTree(root, values.size());
-}
-
 //https://leetcode.com/problems/binary-tree-level-order-traversal/description/
 vector<vector<int>> levelOrder(TreeNode* root) 
 {
@@ -7982,28 +7936,46 @@ int kadaneAlgo(vector<int> &array)
 }
 
 //https://leetcode.com/problems/find-minimum-in-rotated-sorted-array/
-int findMin(vector<int>& nums) 
-{
-	int l = 0, r = nums.size() - 1;
-	int m = 0;
-	while (l < r)
-	{
-		m = (l + r) / 2;
+// 查找循环右移有序数组的最小值
+// 时间复杂度：O(log n)
+int findMin(vector<int>& nums) {
+	int numsSize = nums.size();
 
-		if (nums[m] < nums[r])
-			r = m;
-		else
-			l = m + 1;
+	if (numsSize == 0) return -1;
+
+	int left = 0;
+	int right = numsSize - 1;
+
+	// 如果数组没有被旋转（或旋转了n次），直接返回第一个元素
+	if (nums[left] < nums[right]) {
+		return nums[left];
 	}
 
-	return nums[l];
+	while (left < right) {
+		int mid = left + (right - left) / 2;
+
+		if (nums[mid] > nums[right]) {
+			// 最小值在右半部分
+			left = mid + 1;
+		}
+		else if (nums[mid] < nums[right]) {
+			// 最小值在左半部分（包括mid）
+			right = mid;
+		}
+		else {
+			// nums[mid] == nums[right]，无法确定，缩小范围
+			right--;
+		}
+	}
+
+	return nums[left];
 }
 
 void testfindMin()
 {
 	//vector<int> nums({ 11,13,15,17});
 	//vector<int> nums({ 3,4,5,1,2});
-	vector<int> nums({ 3,1,2});
+	vector<int> nums({ 3,1,2 });
 	findMin(nums);
 }
 
@@ -9267,7 +9239,7 @@ int lengthOfLIS(vector<int>& nums)
 			// lower_bound, 返回第一个 >= val 的索引。 
 			// upper_bound, 返回第一个 大于 (>) 指定值的元素的迭代器
 			//https://www.cnblogs.com/fnlingnzb-learner/p/5845438.html
-			auto it = lower_bound(seq.begin(), seq.end(), nums[i]);
+			auto it = lower_bound(seq.begin(), seq.end(), nums[i]);			
 //			*it = nums[i];
 			
 			// 2 4 6 8 10 11
@@ -15817,9 +15789,319 @@ void testromanToInt()
 	romanToInt(s);
 }
 
-int main()
-{	
-	testromanToInt();
-	return 0;
+//https://leetcode.com/problems/find-the-index-of-the-first-occurrence-in-a-string/description/
+int strStr(string haystack, string needle)
+{
+	int pos = haystack.find(needle.c_str(), 0);
+	if (pos != string::npos)
+		return pos;
+
+	return -1;
 }
 
+void teststrStr()
+{
+	string haystack("leet"), needle("need");
+	strStr(haystack, needle);
+}
+
+//https://leetcode.com/problems/search-insert-position/description/
+int searchInsert(vector<int>& nums, int target) 
+{
+	//if (target <= nums[0] || nums.size() == 0)
+	//	return 0;
+	//if (target >= nums[nums.size() - 1])
+	//	return nums.size();
+
+	int left = 0, right = nums.size() - 1;
+	int mid = left + (right - left) / 2;
+	while (left <= right)
+	{
+		mid = left + (right - left) / 2;
+		if (nums[mid] < target)
+			left = mid + 1;
+		else if (nums[mid] > target)
+			right = mid - 1;
+		else
+			return mid;
+	}
+
+	return left;
+}
+
+void testsearchInsert()
+{
+	vector<int> nums({ 1,3, });
+	searchInsert(nums, 3);
+}
+
+//https://leetcode.com/problems/add-binary/description/
+string addBinary(string &a, string &b) 
+{
+	bool carry = false;
+	string ret;
+	ret.resize(a.size() > b.size() ? a.size() + 1 : b.size() + 1);
+	int ai = a.size() - 1, bi = b.size() - 1, ri = ret.size() - 1;
+	while (ai >= 0 && bi >= 0)
+	{
+		int sum = (a[ai] - '0') + (b[bi] - '0') + carry;
+		bool left = sum % 2;
+		carry = sum / 2;
+		ret[ri] = '0' + left;
+
+		ai--;
+		bi--;
+		ri--;
+	}
+
+	while (ai >= 0)
+	{
+		int sum = a[ai] -'0' + carry;
+		bool left = sum % 2;
+		carry = sum / 2;
+		ret[ri] = '0' + left;
+
+		ai--;
+		ri--;
+	}
+
+	while (bi >= 0)
+	{
+		int sum = b[bi] - '0' + carry;
+		bool left = sum % 2;
+		carry = sum / 2;
+		ret[ri] = '0' + left;
+
+		bi--;
+		ri--;
+	}
+	if (carry)
+	{
+		ret[0] = '1';
+		return ret;
+	}
+	else
+	{
+		string subret = ret.substr(1, ret.size() - 1);
+		return subret;
+	}
+}
+
+void testaddBinary()
+{
+	string a("11"), b("1001");
+
+	addBinary(a, b);
+}
+
+//https://leetcode.com/problems/sqrtx/description/
+int mySqrt(int x) 
+{
+	if (x == 1)
+		return 1;
+
+	int l = 1, r = x;
+	int ret = 0;
+	while (l <= r)
+	{
+		int mid = l + (r - l) / 2;
+		if (mid <= x / mid)
+		{
+			if (mid * mid == x)
+				return mid;
+
+			ret = mid;
+			l = mid + 1;
+		}
+		else
+		{
+			r = mid - 1;
+		}
+	}
+
+	return ret;
+}
+
+//https://leetcode.com/problems/valid-perfect-square/description/
+bool isPerfectSquare(int num) 
+{
+	if (num == 1)
+		return true;
+
+	int l = 1, r = num;
+	while (l <= r)
+	{
+		int mid = l + (r - l) / 2;
+		if (mid <= num / mid)
+		{
+			if (mid * mid == num)
+				return true;
+			l = mid + 1;
+		}
+		else
+			r = mid - 1;
+	}
+
+	return false;
+}
+
+//https://leetcode.com/problems/climbing-stairs/description/
+void climbStairs_helpers(int left, int& ways)
+{
+	if (left == 0)
+	{
+		ways++;
+		return;
+	}
+
+	climbStairs_helpers(left - 1, ways);
+	if (left > 1)
+		climbStairs_helpers(left - 2, ways);
+}
+
+int climbStairs_slow(int n) 
+{
+	int ways= 0;
+	if (n <= 2)
+		return n;
+
+	climbStairs_helpers(n, ways);
+
+	return ways;		
+}
+
+int climbStairs(int n)
+{
+	if (n <= 2)
+		return n;
+
+	int pre_1step = 2;
+	int pre_2steps = 1;
+	int cur = 0;
+	for (int i = 3; i <= n; i++)
+	{ 
+		cur = pre_1step + pre_2steps;
+		pre_2steps = pre_1step;
+		pre_1step = cur;
+	}
+
+	return cur;
+}
+
+void testclimbStairs()
+{
+	climbStairs(5);
+}
+
+//https://leetcode.com/problems/symmetric-tree/description/
+bool Are2NodesSymmetric(const TreeNode* a, const TreeNode* b)
+{
+	if (a == NULL && b == NULL)
+		return true;
+
+	if (a != NULL && b != NULL)
+	{
+		return a->val == b->val;
+	}
+
+	return false;
+}
+
+bool isSymmetric(TreeNode* root)
+{
+	if (root == NULL)
+		return false;
+
+	list<pair<TreeNode*, TreeNode*>> nodelist;
+	nodelist.emplace_back(root->left, root->right);
+	while (nodelist.size() > 0)
+	{		
+		auto itor(nodelist.begin());
+		if (!Are2NodesSymmetric(itor->first, itor->second))
+			return false;
+
+		if (itor->first && itor->second)
+		{
+			nodelist.emplace_back(itor->first->left, itor->second->right);
+			nodelist.emplace_back(itor->first->right, itor->second->left);
+		}
+		nodelist.erase(itor);
+	}
+
+	return true;
+}
+
+bool isSymmetric_ok(TreeNode* root)
+{
+	if (root == NULL || (root->left == NULL && root->right == NULL))
+		return true;
+
+	if ((root->left == NULL && root->right != NULL) ||
+		(root->left != NULL && root->right == NULL) ||
+		(root->left != NULL && root->right != NULL && root->left->val != root->right->val))
+		return false;
+
+	list<pair<TreeNode*, TreeNode*> > nodeList;
+	nodeList.push_back(pair<TreeNode*, TreeNode*>(root->left->left, root->right->right));
+	nodeList.push_back(pair<TreeNode*, TreeNode*>(root->left->right, root->right->left));
+	list<pair<TreeNode*, TreeNode*> >::iterator itor = nodeList.begin();
+	while (nodeList.size() > 0)
+	{
+		TreeNode* n1 = itor->first, * n2 = itor->second;
+		if (n1 == NULL && n2 == NULL)
+		{
+			itor = nodeList.erase(itor);
+			continue;
+		}
+		if ((n1 == NULL && n2 != NULL) ||
+			(n1 != NULL && n2 == NULL) ||
+			(n1->val != n2->val))
+			return false;
+
+		nodeList.push_back(pair<TreeNode*, TreeNode*>(n1->left, n2->right));
+		nodeList.push_back(pair<TreeNode*, TreeNode*>(n1->right, n2->left));
+
+		itor = nodeList.erase(itor);
+	}
+
+	return true;
+}
+
+//https://leetcode.com/problems/maximum-depth-of-binary-tree/description/
+int maxDepth_helper(TreeNode* root, int curdep)
+{
+	if (root == NULL)
+		return curdep;
+
+	int leftdep = curdep;
+	if (root->left)
+		leftdep = maxDepth_helper(root->left, curdep + 1);
+
+	int rightdep = curdep;
+	if (root->right)
+		rightdep = maxDepth_helper(root->right, curdep + 1);
+
+	return max(leftdep, rightdep);
+}
+
+int maxDepth(TreeNode* root) 
+{
+	if (root == NULL)
+		return 0;
+
+	int dep = maxDepth_helper(root, 1);
+	return dep;
+}
+
+void testmaxDepth()
+{
+	vector<int> v1({ 0,1,2,INT_MIN, INT_MIN, 5,6 });	
+	TreeNode** t1 = createTree(v1);
+	maxDepth(*t1);
+}
+
+int main()
+{
+	testmaxDepth();
+	return 0;
+}
