@@ -16015,7 +16015,7 @@ bool isSymmetric(TreeNode* root)
 	list<pair<TreeNode*, TreeNode*>> nodelist;
 	nodelist.emplace_back(root->left, root->right);
 	while (nodelist.size() > 0)
-	{		
+	{
 		auto itor(nodelist.begin());
 		if (!Are2NodesSymmetric(itor->first, itor->second))
 			return false;
@@ -16100,8 +16100,304 @@ void testmaxDepth()
 	maxDepth(*t1);
 }
 
+//https://leetcode.com/problems/pascals-triangle/description/
+vector<vector<int>> generate(int numRows) 
+{
+	vector<vector<int>> ret;
+	vector<int> firstrow({ 1 }), secondrow({ 1,1 });
+	if (numRows == 1)
+	{
+		ret.push_back(firstrow);
+		return ret;
+	}
+	ret.push_back(firstrow);
+	if (numRows == 2)
+	{
+		ret.push_back(secondrow);
+		return ret;
+	}
+	ret.push_back(secondrow);
+	for (int i = 2; i < numRows; i++)
+	{
+		vector<int> nthrow(i+1);
+		nthrow[0] = 1;
+		nthrow[i] = 1;
+		for (int j = 1; j < i; j++)
+		{
+			nthrow[j] = ret[i -1][j - 1] + ret[i - 1][j];
+		}
+		ret.push_back(nthrow);
+	}
+
+	return ret;
+}
+
+
+vector<int> getRow(int rowIndex)
+{
+	vector<vector<int>> ret;
+	vector<int> firstrow({ 1 }), secondrow({ 1,1 });
+	if (rowIndex == 0)
+	{
+		return firstrow;
+	}
+	ret.push_back(firstrow);
+	if (rowIndex == 1)
+	{	
+		return secondrow;
+	}
+	ret.push_back(secondrow);
+	for (int i = 2; i <= rowIndex; i++)
+	{
+		vector<int> nthrow(i + 1);
+		nthrow[0] = 1;
+		nthrow[i] = 1;
+		for (int j = 1; j < i; j++)
+		{
+			nthrow[j] = ret[i - 1][j - 1] + ret[i - 1][j];
+		}
+		ret.push_back(nthrow);
+	}
+
+	return ret[rowIndex];
+}
+void testgenerate()
+{
+	getRow(5);
+}
+
+//https://leetcode.com/problems/valid-palindrome/description/
+bool isPalindrome_slow(string s)
+{
+	string s2(s.size(), 0);
+	int i = 0;
+	for (char c : s)
+	{
+		if ((c >= 'a' && c <= 'z') || (c >= '0' && c <= '9'))
+		{
+			s2[i] = c;
+			i++;
+		}
+		else if (c >= 'A' && c <= 'Z')
+		{
+			s2[i] = c + 32;
+			i++;
+		}
+	}
+	
+	int l = 0, r = i - 1;
+	while (l < r)
+	{
+		if (s2[l] != s2[r])
+			return false;
+		l++;
+		r--;
+	}
+	return true;
+}
+
+bool isLetterOrNum(char c)
+{
+	return (c >= 'a' && c <= 'z') || (c >= '0' && c <= '9') || (c>= 'A' && c<= 'Z');
+}
+
+char covertToLower(char c)
+{
+	if (c >= 'A' && c <= 'Z')
+		return c + 32;
+
+	return c;
+}
+
+bool isPalindrome(string s)
+{
+	int l = 0, r = s.size() - 1;
+	while (l < r)
+	{
+		while (l < r && !isLetterOrNum(s[l]))
+		{
+			l++;
+		}
+
+		while (l < r && !isLetterOrNum(s[r]))
+		{
+			r--;
+		}
+
+		if (covertToLower(s[l]) != covertToLower(s[r]))
+			return false;
+
+		l++;
+		r--;
+	}
+
+	return true;
+}
+
+void testisPalindrome()
+{
+	string s("A man, a plan, a canal: Panama");
+	isPalindrome(s);
+}
+
+//https://leetcode.com/problems/surrounded-regions/description/
+void findwholeregion(vector<vector<char>>& board, int row, int col)
+{
+	bool newnodeonpath = false;
+	board[row][col] = 'N';
+
+	set<pair<int, int>> curnodecandidates;
+	// up
+	if (row - 1 >= 0 && board[row - 1][col] == 'O')
+	{
+		findwholeregion(board, row - 1, col);
+	}
+
+	//dwon
+	if (row + 1 <= board.size() - 1 && board[row + 1][col] == 'O')
+	{
+		findwholeregion(board, row + 1, col);
+	}
+
+	//left
+	if (col - 1 >= 0 && board[row][col - 1] == 'O')
+	{
+		findwholeregion(board, row, col-1);
+	}
+
+	//right
+	if (col + 1 <= board[0].size() - 1 && board[row][col + 1] == 'O')
+	{
+		findwholeregion(board, row, col+1);
+	}
+}
+
+
+void solve(vector<vector<char>>& board)
+{
+	int row = 1, col = 1;
+	int ROW = board.size() - 1, COL = board[0].size() - 1;
+
+	for (row = 0; row <= ROW; row++)
+	{
+		if (board[row][0] == 'O')
+		{
+			
+			findwholeregion(board, row, 0);
+		}
+
+		if (board[row][COL] == 'O')
+		{
+			
+			findwholeregion(board, row, COL);
+		}		
+	}
+
+	for (col = 0; col <= COL; col++)
+	{
+		if (board[0][col] == 'O')
+		{
+			findwholeregion(board, 0, col);
+		}
+
+		if (board[ROW][col] == 'O')
+		{
+			findwholeregion(board, ROW, col);
+		}
+	}
+
+	for (row = 0; row <= ROW; row++)
+	{
+		for (col = 0; col <= COL; col++)
+		{
+			if (board[row][col] == 'O')
+			{
+				board[row][col] = 'X';
+			}
+
+			if (board[row][col] == 'N')
+			{
+				board[row][col] = 'O';
+			}
+		}
+	}
+}
+
+void testsolve()
+{
+	vector<vector<char>> board({
+		//	{'X','X','X','X'},
+		//	{'X','O','O','X'},
+		//	{'X','X','O','X'},
+		//	{'X','O','X','X'} 
+		
+	 //{'X','O','X','O','X','O','O','O','X','O'},
+	 //{'X','O','O','X','X','X','O','O','O','X'},
+	 //{'O','O','O','O','O','O','O','O','X','X'},
+	 //{'O','O','O','O','O','O','X','O','O','X'},
+	 //{'O','O','X','X','O','X','X','O','O','O'},
+	 //{'X','O','O','X','X','X','O','X','X','O'},
+	 //{'X','O','X','O','O','X','X','O','X','O'},
+	 //{'X','X','O','X','X','O','X','O','O','X'},
+	 //{'O','O','O','O','X','O','X','O','X','O'},
+	 //{'X','X','O','X','X','X','X','O','O','O'}
+
+		{'O'}
+		});
+
+	solve(board);
+}
+//https://leetcode.com/problems/palindrome-partitioning/
+bool partition_helper_checkpalindrome(string& s, int l, int r)
+{
+	if (s.size() == 1 || l == r)
+		return true;
+
+	while (l < r)
+	{
+		if (s[l] != s[r])
+			return false;
+	}
+
+	return true;
+}
+
+vector<vector<string>> partition(string &s) 
+{
+	vector<vector<string>> ret;
+	int pallen = 1;
+	while (pallen <= s.size())
+	{
+		int i = 0; 
+		vector<string> onepart;
+		while (i + pallen < ret.size())
+		{			
+			if (partition_helper_checkpalindrome(s, i, i + pallen - 1))
+			{
+				onepart.push_back(s.substr(i, pallen));
+				i += pallen;
+			}
+			else
+			{
+				onepart.push_back(s.substr(i, 1));
+				i++;
+			}
+		}
+		ret.push_back(onepart);
+		pallen++;
+	}
+
+	return ret;
+}
+
+void testpartition131()
+{
+	string s("aab");
+	partition(s);
+}
+
 int main()
 {
-	testmaxDepth();
+	testpartition131();
 	return 0;
 }
