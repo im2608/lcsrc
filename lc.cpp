@@ -67,6 +67,19 @@ using namespace std;
 // 向右循环移动可以转化为： 向左移动 len - right 步
 // 
 
+void cppversion()
+{
+	/*
+	199711 → C++98 / 03
+	201103 → C++11
+	201402 → C++14
+	201703 → C++17
+	202002 → C++20
+	202302 → C++23
+	*/
+	std::cout << __cplusplus << std::endl;
+}
+
 ListNode* createListNode(vector<int>& n)
 {
 	ListNode* head = new ListNode(n[0]);
@@ -16620,18 +16633,7 @@ vector<vector<int>> combinationSum3(int k, int n)
 	return ret;
 }
 
-void cppversion()
-{
-	/*
-	199711 → C++98 / 03
-	201103 → C++11
-	201402 → C++14
-	201703 → C++17
-	202002 → C++20
-	202302 → C++23
-	*/
-	std::cout << __cplusplus << std::endl;
-}
+
 int main()
 {
 	
