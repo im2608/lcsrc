@@ -28,6 +28,8 @@
 #include <cassert>
 #include <variant>
 #include "lc.h"
+#include <execution>
+
 #include ".\lc\sudoku.h"
 
 using namespace std;
@@ -77,7 +79,6 @@ ListNode* createListNode(vector<int>& n)
 	}
 
 	return head;
-
 }
 
 void deleteList(ListNode* head)
@@ -1404,44 +1405,6 @@ void letterCombinationsTest()
 	letterCombinations(str);
 }
 
-//https://leetcode.com/problems/combination-sum-iii/
-int getSumOfCombination(vector<int>& oneCombination)
-{
-	int sum = 0;
-	for (size_t i = 0; i < oneCombination.size(); i++)
-	{
-		sum += oneCombination[i];
-	}
-
-	return sum;
-}
-
-void getCombinations(int k, int n, int num, vector<int> oneCombination, vector<vector<int>> ret)
-{
-	if (oneCombination.size() == n)
-	{
-		if (getSumOfCombination(oneCombination) == n)
-		{
-			ret.push_back(oneCombination);
-			return;				
-		}
-	}
-
-	if (k == 0 || num == 10)
-		return;
-
-	oneCombination.push_back(num);
-	getCombinations(k - 1, n, num + 1, oneCombination, ret);
-	oneCombination.pop_back();
-	getCombinations(k, n, num + 1, oneCombination, ret);
-}
-vector<vector<int>> combinationSum3(int k, int n) 
-{
-	vector<vector<int>> ret;
-
-	return ret;
-}
-
 // https://leetcode.com/problems/populating-next-right-pointers-in-each-node-ii/
 int getTreeDepth(Node *pNode, int curDepth)
 {
@@ -2416,6 +2379,16 @@ void testcanjump()
 // post: 2315764
 // in:   1234567
 // https://blog.csdn.net/qq_39445165/article/details/93971171
+//1 中序遍历可以与前序遍历、后序遍历和层次遍历中的任意一个来构建唯一的二叉树，而后三者两两搭配或者是三个一起上都无法创建一颗唯一的一颗二叉树，
+// 原因是先序、后序、层次遍历均是提供根节点，作用是相同的，都必须由中序遍历来区分出左子树与右子树，所以中序遍历与后序遍历可以唯一确定一棵二叉树
+//
+//2 首先是要先确定二叉树的根，确定二叉树的根可以在二叉树的后序遍历序列中去找，后序遍历中最后一个节点就是根节点，然后再在中序遍历中找到根节点区分出左子树与右子树
+//
+//假设递归过程中某步的后序序列区间是[postL, postR]，中序序列区间为[inL， inR]，那么由后序序列的性质可以知道，
+// 后序序列的最后一个元素post[postR]即为根节点，接着需要在中序序列中寻找一个位置k，使得in[k] == post[postR]，这样就找到了中序序列中的根节点，
+// 易知左子树结点个数为numLeft = k - inL; 于是左子树的后序序列区间为[postL，postL + numLeft - 1]，
+// 左子树的中序序列区间是[inL，k - 1]，右子树的后序序列区间是[postL + numLeft，postR - 1], 右子树的中序序列区间为[k + 1，inR]
+
 int getRootPosFromIn(vector<int>& inorder, int root)
 {
 	for (int i = 0; i < inorder.size(); i++)
@@ -7936,9 +7909,25 @@ int kadaneAlgo(vector<int> &array)
 }
 
 //https://leetcode.com/problems/find-minimum-in-rotated-sorted-array/
+int findMin(vector<int>& nums) 
+{
+	int l = 0, r = nums.size() - 1;
+	int m = 0;
+	while (l < r)
+	{
+		m = (l + r) / 2;
+
+		if (nums[m] < nums[r])
+			r = m;
+		else
+			l = m + 1;
+	}
+
+	return nums[l];
+}
 // 查找循环右移有序数组的最小值
 // 时间复杂度：O(log n)
-int findMin(vector<int>& nums) {
+int findMin_ok(vector<int>& nums) {
 	int numsSize = nums.size();
 
 	if (numsSize == 0) return -1;
@@ -14308,65 +14297,69 @@ void testlargestRectangleArea()
 }
 
 //https://leetcode.com/problems/decode-ways/description/
-void numDecodings_helper(string& s, int idx, int &result, vector<int> stepsonpath, bool onehop)
-{
-	if (idx > s.size() || s[idx] == '0')
-		return;
-
-	if (idx == s.size())
-	{
-		result += 1;
-		return;
+int numDecodings(string s) {
+	if (s.empty() || s[0] == '0') {
+		return 0;
 	}
-	
-	if (s[idx] == '1')
-	{
-		numDecodings_helper(s, idx + 1, result, stepsonpath, true);
-		stepsonpath.push_back(1);
-		if (idx + 1 < s.size())
-		{
-			stepsonpath.pop_back();
-			stepsonpath.push_back(2);
-			numDecodings_helper(s, idx + 2, result, stepsonpath, false);
+
+	int n = s.length();
+	vector<int> dp(n + 1, 0);
+
+	dp[0] = 1; // Empty string has one way to decode
+	dp[1] = 1; // First character (non-zero) has one way to decode
+
+	for (int i = 2; i <= n; i++) {
+		// Check if current digit is not '0' (can be decoded alone)
+		if (s[i - 1] != '0') {
+			dp[i] += dp[i - 1];
+		}
+
+		// Check if two-digit number formed by current and previous digit is valid (10-26)
+		int two_digit = (s[i - 2] - '0') * 10 + (s[i - 1] - '0');
+		if (two_digit >= 10 && two_digit <= 26) {
+			dp[i] += dp[i - 2];
 		}
 	}
-	else if (s[idx] == '2')
-	{
-		stepsonpath.push_back(1);
-		numDecodings_helper(s, idx + 1, result, stepsonpath, true);
-		if (idx + 1 < s.size() && s[idx + 1] <= '6')
-		{
-			stepsonpath.pop_back();
-			stepsonpath.push_back(2);
-			numDecodings_helper(s, idx + 2, result, stepsonpath, false);
+
+	return dp[n];
+}
+
+// Optimized version using O(1) space
+int numDecodingsOptimized(string s) {
+	if (s.empty() || s[0] == '0') {
+		return 0;
+	}
+
+	int n = s.length();
+	int prev2 = 1; // dp[i-2]
+	int prev1 = 1; // dp[i-1]
+	int current = 1; // dp[i]
+
+	for (int i = 1; i < n; i++) {
+		current = 0;
+
+		// Check if current digit is not '0'
+		if (s[i] != '0') {
+			current += prev1;
 		}
-	}
-	else
-	{
-		stepsonpath.push_back(1);
-		numDecodings_helper(s, idx + 1, result, stepsonpath, true);
-	}
-}
 
-int numDecodings(string &s) 
-{
-	int i = 0;
-	for (i = 0; i < s.size(); i++)
-	{
-		if (s[i] < '1' || s[i] > '9')
-			return 0;
+		// Check if two-digit number is valid
+		int two_digit = (s[i - 1] - '0') * 10 + (s[i] - '0');
+		if (two_digit >= 10 && two_digit <= 26) {
+			current += prev2;
+		}
+
+		prev2 = prev1;
+		prev1 = current;
 	}
 
-	int result = 0;
-	vector<int> stepsonpath;
-	
-	numDecodings_helper(s, 0, result, stepsonpath, true);
-	return result;
+	return current;
 }
+
 
 void testnumDecodings()
 {
-	string s("1111");
+	string s("1232");
 	numDecodings(s);
 }
 // 1 1 1 1 
@@ -14450,11 +14443,16 @@ void testgenerateTrees2()
 }
 
 //https://leetcode.com/problems/gray-code/description/
-vector<int> grayCode(int n) 
-{
-	vector<int> ret;
+vector<int> grayCode(int n) {
+	vector<int> result;
+	int size = 1 << n; // 2^n
 
-	return ret;
+	for (int i = 0; i < size; i++) {
+		// Gray code formula: i ^ (i >> 1)
+		result.push_back(i ^ (i >> 1));
+	}
+
+	return result;
 }
 
 void testgrayCode()
@@ -16357,6 +16355,8 @@ bool partition_helper_checkpalindrome(string& s, int l, int r)
 	{
 		if (s[l] != s[r])
 			return false;
+		l++;
+		r--;
 	}
 
 	return true;
@@ -16365,25 +16365,67 @@ bool partition_helper_checkpalindrome(string& s, int l, int r)
 vector<vector<string>> partition(string &s) 
 {
 	vector<vector<string>> ret;
+	if (s.size() == 0)
+		return ret;
+
 	int pallen = 1;
 	while (pallen <= s.size())
 	{
-		int i = 0; 
-		vector<string> onepart;
-		while (i + pallen < ret.size())
-		{			
+		int i = 0;
+		vector<string> onepart, palwithlen;
+		vector<int> palposidx;
+		while (i + pallen <= s.size())
+		{
 			if (partition_helper_checkpalindrome(s, i, i + pallen - 1))
 			{
-				onepart.push_back(s.substr(i, pallen));
+				palwithlen.push_back(s.substr(i, pallen));
+				palposidx.push_back(i);
 				i += pallen;
 			}
 			else
 			{
-				onepart.push_back(s.substr(i, 1));
 				i++;
 			}
 		}
-		ret.push_back(onepart);
+
+		if (palposidx.size() > 0)
+		{
+			if (palposidx[0] > 0)
+			{
+				int j = 0;
+				while (j < palposidx[0])
+				{
+					onepart.push_back(s.substr(j, 1));
+					j++;
+				}
+			}
+			i = 0;
+			for (i = 0; i < palposidx.size(); i++)
+			{
+				onepart.push_back(palwithlen[i]);
+				if (i + 1 < palposidx.size() && palposidx[i] + pallen < palposidx[i + 1])
+				{
+					int j = i + pallen;
+					while (j < palposidx[i + 1])
+					{
+						onepart.push_back(s.substr(j, 1));
+						j++;
+					}
+				}
+			}
+			if (palposidx[i-1] + pallen < s.size())
+			{
+				int j = palposidx[i-1] + pallen;
+				while (j < s.size())
+				{
+					onepart.push_back(s.substr(j, 1));
+					j++;
+				}
+			}
+		}
+
+		if (onepart.size() > 0)
+			ret.push_back(onepart);
 		pallen++;
 	}
 
@@ -16396,8 +16438,203 @@ void testpartition131()
 	partition(s);
 }
 
+//https://leetcode.com/problems/binary-search-tree-iterator/description/
+class BSTIterator {
+public:
+	vector<TreeNode*> nodesinorder;
+	vector<TreeNode*>::iterator nodeitor;
+	TreeNode* mostleft;
+	BSTIterator(TreeNode* root) {
+		iteraternodeinorder(root);
+		nodeitor = nodesinorder.begin();
+	}
+
+	int next() {
+		int tmp = (*nodeitor)->val;
+		nodeitor++;
+		return tmp;
+	}
+
+	bool hasNext() {		
+		return (nodeitor != this->nodesinorder.end());
+	}
+
+private:
+	void iteraternodeinorder(TreeNode* root)
+	{
+		if (root == NULL)
+			return;
+		if (root->left)
+			iteraternodeinorder(root->left);
+
+		this->nodesinorder.push_back(root);
+
+		if (root->right)
+			iteraternodeinorder(root->right);
+	}
+};
+
+void testBSTIterator()
+{
+	vector<int> values({ 7,3,15,INT_MIN,INT_MIN,9,20 });
+	TreeNode** root = createTree(values);
+	BSTIterator bstitor(*root);
+	bstitor.hasNext();
+}
+
+//https://leetcode.com/problems/min-stack/
+class MinStack {
+public:
+	stack<int> minstack, datastack;
+	
+	MinStack() {		
+	}
+
+	void push(int val) {
+		datastack.push(val);
+		if (minstack.empty() || minstack.top() >= val)
+			minstack.push(val);
+		else
+			minstack.push(minstack.top());
+	}
+
+	void pop() {
+		minstack.pop();
+		datastack.pop();
+	}
+
+	int top() {
+		return datastack.top();
+	}
+
+	int getMin() {
+		return minstack.top();
+	}
+};
+
+void testminstack()
+{
+	MinStack minStack;
+	minStack.push(-2);
+	minStack.push(0);
+	minStack.push(-3);
+	minStack.getMin(); // return -3
+	minStack.pop();
+	minStack.top();    // return 0
+	minStack.getMin(); // return -2
+}
+
+//https://leetcode.com/problems/fraction-to-recurring-decimal/description/
+string fractionToDecimal(int numerator, int denominator) {
+	// Step 1: Handle edge case - numerator is 0
+	if (numerator == 0) return "0";
+
+	string result;
+
+	// Step 2: Handle sign
+	if ((numerator < 0) ^ (denominator < 0)) {
+		result += "-";
+	}
+
+	// Step 3: Work with absolute values (use long long to avoid overflow)
+	long long num = abs(static_cast<long long>(numerator));
+	long long den = abs(static_cast<long long>(denominator));
+
+	// Step 4: Calculate integer part
+	result += to_string(num / den);
+	long long remainder = num % den;
+
+	// If no remainder, we're done
+	if (remainder == 0) return result;
+
+	// Step 5: Process decimal part
+	result += ".";
+
+	// Step 6: Use hash table to track remainders and their positions
+	unordered_map<long long, int> remainderMap;
+
+	while (remainder != 0) {
+		// If we've seen this remainder before, we found a repeating cycle
+		if (remainderMap.find(remainder) != remainderMap.end()) {
+			int insertPos = remainderMap[remainder];
+			result.insert(insertPos, "(");
+			result += ")";
+			break;
+		}
+
+		// Record the current remainder and its position
+		remainderMap[remainder] = result.length();
+
+		// Long division simulation
+		remainder *= 10;
+		result += to_string(remainder / den);
+		remainder = remainder % den;
+	}
+
+	return result;
+}
+
+void testfractionToDecimal()
+{
+	fractionToDecimal(4, 333);
+}
+
+
+//https://leetcode.com/problems/combination-sum-iii/
+int getSumOfCombination(vector<int>& oneCombination)
+{
+	int sum = 0;
+	for (size_t i = 0; i < oneCombination.size(); i++)
+	{
+		sum += oneCombination[i];
+	}
+
+	return sum;
+}
+
+void getCombinations(int k, int n, int num, vector<int> oneCombination, vector<vector<int>> ret)
+{
+	if (oneCombination.size() == n)
+	{		
+		if (getSumOfCombination(oneCombination) == n)
+		{
+			ret.push_back(oneCombination);
+			return;
+		}
+	}
+
+	if (k == 0 || num == 10)
+		return;
+
+	oneCombination.push_back(num);
+	getCombinations(k - 1, n, num + 1, oneCombination, ret);
+	oneCombination.pop_back();
+	getCombinations(k, n, num + 1, oneCombination, ret);
+}
+vector<vector<int>> combinationSum3(int k, int n)
+{
+	vector<vector<int>> ret;
+	if (n > 45)
+		return ret;
+
+	return ret;
+}
+
+void cppversion()
+{
+	/*
+	199711 → C++98 / 03
+	201103 → C++11
+	201402 → C++14
+	201703 → C++17
+	202002 → C++20
+	202302 → C++23
+	*/
+	std::cout << __cplusplus << std::endl;
+}
 int main()
 {
-	testpartition131();
+	
+	testbuildTree();
 	return 0;
 }
