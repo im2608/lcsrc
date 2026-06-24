@@ -79,7 +79,6 @@ void cppversion()
 	*/
 	std::cout << __cplusplus << std::endl;
 }
-
 ListNode* createListNode(vector<int>& n)
 {
 	ListNode* head = new ListNode(n[0]);
@@ -190,6 +189,32 @@ int testbs2()
 	}
 
 	return result;
+}
+
+void insertTreeNodeValue(TreeNode *node, int x)
+{
+	if (x < node->val)
+	{
+		if (node->left == NULL)
+		{
+			node->left = new TreeNode(x);
+		}
+		else
+		{
+			insertTreeNodeValue(node->left, x);
+		}
+	}
+	else
+	{
+		if (node->right == NULL)
+		{
+			node->right = new TreeNode(x);
+		}
+		else
+		{
+			insertTreeNodeValue(node->right, x);
+		}
+	}
 }
 
 // https://leetcode.com/problems/longest-substring-without-repeating-characters/
@@ -7588,36 +7613,31 @@ void testsingleNumber()
 }
 
 //https://leetcode.com/problems/copy-list-with-random-pointer/
-Node* copyRandomList(Node* head) 
+Node* copyRandomList(Node* head)
 {
 	if (head == NULL)
 		return NULL;
 
-	unordered_map<Node*, Node*> nodeMap;
-
-	Node* srcidx = head->next;
-	Node* ret = new Node(head->val);
-	nodeMap[head] = ret;
-
-	Node* copyidx1 = ret, * copyidx2 = NULL;
-	while (srcidx != NULL)
+	map<Node*, Node*> nodeMap;
+	Node *nodeidx = head;
+	while (nodeidx != NULL)
 	{
-		copyidx2 = new Node(srcidx->val);
-		nodeMap[srcidx] = copyidx2;
-		srcidx = srcidx->next;
+		nodeMap[nodeidx] = new Node(nodeidx->val);
+		nodeidx = nodeidx->next;
 	}
 
-	srcidx = head;
-	while (srcidx != NULL)
+	nodeidx = head;
+	Node* next = nodeidx->next;
+	while (nodeidx != NULL)
 	{
-		if (srcidx->random)
+		nodeMap[nodeidx]->next = nodeMap[nodeidx->next];
+		if (nodeidx->random != NULL)
 		{
-			nodeMap[srcidx]->random = nodeMap[srcidx->random];
+			nodeMap[nodeidx]->random = nodeMap[nodeidx->random];
 		}
-		nodeMap[srcidx]->next = nodeMap[srcidx->next];
-		srcidx = srcidx->next;
+		nodeidx = nodeidx->next;
 	}
-	
+
 	return nodeMap[head];
 }
 
@@ -11024,43 +11044,6 @@ void testNumMatrix()
 								    });
 	NumMatrix n(matrix);
 }
-//https://leetcode.com/problems/unique-binary-search-trees-ii/description/
-
-vector<TreeNode*> buildTree(int start, int end) {
-	vector<TreeNode*> ans;
-
-	// If start > end, then subtree will be empty so add NULL in the ans and return it.
-	if (start > end) {
-		ans.push_back(NULL);
-		return ans;
-	}
-
-	// Iterate through all values from start to end to construct left and right subtree recursively
-	for (int i = start; i <= end; ++i) {
-		vector<TreeNode*> leftSubTree = buildTree(start, i - 1);    // Construct left subtree
-		vector<TreeNode*> rightSubTree = buildTree(i + 1, end);     // Construct right subtree
-
-		// loop through all left and right subtrees and connect them to ith root  
-		for (int j = 0; j < leftSubTree.size(); j++) {
-			for (int k = 0; k < rightSubTree.size(); k++) {
-				TreeNode* root = new TreeNode(i);   // Create root with value i
-				root->left = leftSubTree[j];   // Connect left subtree rooted at leftSubTree[j]
-				root->right = rightSubTree[k];   // Connect right subtree rooted at rightSubTree[k]
-				ans.push_back(root);    // Add this tree(rooted at i) to ans data-structure
-			}
-		}
-	}
-
-	return ans;
-}
-vector<TreeNode*> generateTrees(int n) {
-	return buildTree(1, n);
-}
-
-void testgenerateTrees()
-{
-	generateTrees(2);
-}
 
 //https://leetcode.com/problems/minimum-genetic-mutation
 //BFS
@@ -14382,78 +14365,78 @@ void testnumDecodings()
 // 2 2
 // 
 
-//https://leetcode.com/problems/unique-binary-search-trees-ii/description/
-bool isAllNodeSet(int n, vector<bool>& nmarks)
-{
-	for (int i = 1; i <= n; i++)
-	{
-		if (nmarks[i] == 0)
-			return false;
-	}
-
-	return true;
-}
-
-// 68453127
-void generateTrees2_helper(int n, TreeNode* root, TreeNode* parent, bool isLeft, vector<bool> nmarks, vector<TreeNode*> &result)
-{
-	int start = 0, end = 0;
-
-	if (isLeft)
-	{
-		start = 1;
-		end = parent->val - 1;		
-	}
-	else
-	{
-		start = parent->val + 1;
-		end = n;
-	}
-
-	for (int i = start; i <= end; i++)
-	{
-		if (nmarks[i])
-			continue;
-
-		TreeNode* node = new TreeNode(i);
-		if (isLeft)
-			parent->left = node;
-		else
-			parent->right = node;
-
-		vector<bool> tmp_nmarks(nmarks);
-		tmp_nmarks[i] = true;
-		if (isAllNodeSet(n, nmarks))
-		{
-			result.push_back(root);
-			return;
-		}
-
-		generateTrees2_helper(n, root, node, true, tmp_nmarks, result);
-		generateTrees2_helper(n, root, node, false, tmp_nmarks, result);
-	}
-}
-
-vector<TreeNode*> generateTrees2(int n) {
-	vector<bool> nmarks(n+1, 0);
-	vector<TreeNode*> result;
-	for (int i = 1; i <= n; i++)
-	{
-		nmarks[i] = true;
-		TreeNode* root = new TreeNode(i);
-
-		generateTrees2_helper(n, root, root, true, nmarks, result);
-		generateTrees2_helper(n, root, root, false, nmarks, result);
-		nmarks.clear();
-	}
-
-	return result;
-}
-
-void testgenerateTrees2()
-{
-	generateTrees2(3);
-}
+//
+//bool isAllNodeSet(int n, vector<bool>& nmarks)
+//{
+//	for (int i = 1; i <= n; i++)
+//	{
+//		if (nmarks[i] == 0)
+//			return false;
+//	}
+//
+//	return true;
+//}
+//
+//// 68453127
+//void generateTrees2_helper(int n, TreeNode* root, TreeNode* parent, bool isLeft, vector<bool> nmarks, vector<TreeNode*> &result)
+//{
+//	int start = 0, end = 0;
+//
+//	if (isLeft)
+//	{
+//		start = 1;
+//		end = parent->val - 1;		
+//	}
+//	else
+//	{
+//		start = parent->val + 1;
+//		end = n;
+//	}
+//
+//	for (int i = start; i <= end; i++)
+//	{
+//		if (nmarks[i])
+//			continue;
+//
+//		TreeNode* node = new TreeNode(i);
+//		if (isLeft)
+//			parent->left = node;
+//		else
+//			parent->right = node;
+//
+//		vector<bool> tmp_nmarks(nmarks);
+//		tmp_nmarks[i] = true;
+//		if (isAllNodeSet(n, nmarks))
+//		{
+//			result.push_back(root);
+//			return;
+//		}
+//
+//		generateTrees2_helper(n, root, node, true, tmp_nmarks, result);
+//		generateTrees2_helper(n, root, node, false, tmp_nmarks, result);
+//	}
+//}
+//
+//vector<TreeNode*> generateTrees2(int n) {
+//	vector<bool> nmarks(n+1, 0);
+//	vector<TreeNode*> result;
+//	for (int i = 1; i <= n; i++)
+//	{
+//		nmarks[i] = true;
+//		TreeNode* root = new TreeNode(i);
+//
+//		generateTrees2_helper(n, root, root, true, nmarks, result);
+//		generateTrees2_helper(n, root, root, false, nmarks, result);
+//		nmarks.clear();
+//	}
+//
+//	return result;
+//}
+//
+//void testgenerateTrees2()
+//{
+//	generateTrees2(3);
+//}
 
 //https://leetcode.com/problems/gray-code/description/
 vector<int> grayCode(int n) {
@@ -16605,24 +16588,27 @@ int getSumOfCombination(vector<int>& oneCombination)
 	return sum;
 }
 
-void getCombinations(int k, int n, int num, vector<int> oneCombination, vector<vector<int>> ret)
+void getCombinations(int k, int n, int num, vector<int> oneCombination, int cursum, vector<vector<int>> &ret)
 {
-	if (oneCombination.size() == n)
-	{		
-		if (getSumOfCombination(oneCombination) == n)
+	if (oneCombination.size() == k)
+	{
+		if (cursum == n)
 		{
 			ret.push_back(oneCombination);
-			return;
 		}
+		return;
 	}
 
-	if (k == 0 || num == 10)
-		return;
-
-	oneCombination.push_back(num);
-	getCombinations(k - 1, n, num + 1, oneCombination, ret);
-	oneCombination.pop_back();
-	getCombinations(k, n, num + 1, oneCombination, ret);
+	for (int i = num + 1; i <= 9 && i <= n; i++)
+	{
+		if (cursum + i > n)
+			break;
+		cursum += i;
+		oneCombination.push_back(i);
+		getCombinations(k, n, i, oneCombination, cursum, ret);
+		cursum -= i;
+		oneCombination.pop_back();
+	}
 }
 vector<vector<int>> combinationSum3(int k, int n)
 {
@@ -16630,13 +16616,747 @@ vector<vector<int>> combinationSum3(int k, int n)
 	if (n > 45)
 		return ret;
 
+	for (int i = 1; i <= 9 && i <= n; i++)
+	{
+		vector<int> oneCombination;
+		oneCombination.push_back(i);
+		getCombinations(k, n, i, oneCombination, i, ret);
+		oneCombination.pop_back();
+	}
+
 	return ret;
 }
 
+void testcombinationSum3()
+{
+	combinationSum3(4, 1);
+}
+
+//https://leetcode.com/problems/maximum-product-subarray/description/
+void maxProduct_helper(vector<int>& nums, int idx, int curprod, int &maxprod)
+{
+	if (curprod > maxprod)
+		maxprod = curprod;
+
+	if (nums[idx] == 0)
+		return;
+
+	if (idx + 1 < nums.size())
+		maxProduct_helper(nums, idx + 1, curprod * nums[idx + 1], maxprod);
+}
+
+int maxProduct_slow(vector<int>& nums) 
+{
+	int ret = INT_MIN;
+	
+	for (int i = 0; i < nums.size(); i++)
+	{
+		maxProduct_helper(nums, i, nums[i], ret);
+	}
+	return ret;
+}
+
+int maxProduct(vector<int>& nums) 
+{
+	int max_p = nums[0], min_p = nums[0], res = nums[0];
+
+	for (int i = 1; i < nums.size(); i++) 
+	{
+		if (nums[i] < 0) 
+			swap(max_p, min_p);
+
+		max_p = max(nums[i], max_p * nums[i]);
+		min_p = min(nums[i], min_p * nums[i]);
+		res = max(res, max_p);
+	}
+
+	return res;
+}
+void testmaxProduct()
+{
+	vector<int> nums({ 1,0,-5,2,3,-8,-9 });
+	maxProduct(nums);
+}
+
+//https://leetcode.com/problems/interleaving-string/
+bool isInterleave(string s1, string s2, string s3) {
+	const int m = s1.length();
+	const int n = s2.length();
+
+	// 长度不匹配直接返回false
+	if (m + n != s3.length()) return false;
+
+	// dp[i][j] 表示 s3[0..i+j) 是否能由 s1[0..i) 和 s2[0..j) 交错组成
+	vector<vector<bool>> dp(m + 1, vector<bool>(n + 1));
+	dp[0][0] = true;
+
+	// 初始化第一列（只用s1的字符）
+	for (int i = 1; i <= m; ++i) {
+		dp[i][0] = dp[i - 1][0] && s1[i - 1] == s3[i - 1];
+	}
+
+	// 初始化第一行（只用s2的字符）
+	for (int j = 1; j <= n; ++j) {
+		dp[0][j] = dp[0][j - 1] && s2[j - 1] == s3[j - 1];
+	}
+
+	// 填充DP表
+	for (int i = 1; i <= m; ++i) {
+		for (int j = 1; j <= n; ++j) {
+			dp[i][j] = (dp[i - 1][j] && s1[i - 1] == s3[i + j - 1]) ||
+				(dp[i][j - 1] && s2[j - 1] == s3[i + j - 1]);
+		}
+	}
+
+	return dp[m][n];
+}
+
+void testisInterleave()
+{
+	string s1("aabcc"), s2("dbbca"), s3("aadbbbaccc");
+	isInterleave(s1, s2, s3);
+}
+
+//https://leetcode.com/problems/binary-tree-zigzag-level-order-traversal/
+void zigzagLevelOrder_helper(list<TreeNode*> nodelist, vector<vector<int>>& ret, bool lefttoright)
+{
+	vector<int> onelayer;
+	list<TreeNode *> onelayernodes;
+	auto listitor = nodelist.begin();
+	while (listitor != nodelist.end())
+	{
+		printf("printing %d\n", (*listitor)->val);
+		onelayer.push_back((*listitor)->val);
+		if (lefttoright)
+		{
+			if ((*listitor)->left)
+			{
+				onelayernodes.push_front((*listitor)->left);
+			}
+			if ((*listitor)->right)
+			{
+				onelayernodes.push_front((*listitor)->right);
+			}
+		}
+		else
+		{
+			if ((*listitor)->right)
+			{
+				onelayernodes.push_front((*listitor)->right);
+			}
+
+			if ((*listitor)->left)
+			{
+				onelayernodes.push_front((*listitor)->left);
+			}
+		}
+
+		listitor++;
+	}
+
+	if (onelayer.size() > 0)
+	{
+		ret.push_back(onelayer);
+		zigzagLevelOrder_helper(onelayernodes, ret, !lefttoright);
+	}
+}
+
+vector<vector<int>> zigzagLevelOrder(TreeNode* root) 
+{
+	vector<vector<int>> ret;
+	if (root == NULL)
+		return ret;
+	
+	list<TreeNode*> nodelist;
+	nodelist.push_back(root);
+	zigzagLevelOrder_helper(nodelist, ret, true);
+
+	return ret;
+}
+
+void testzigzagLevelOrder()
+{
+	vector<int> v1({ 3,9,20,INT_MIN, INT_MIN, 15, 7});
+	TreeNode** t1 = createTree(v1);
+	zigzagLevelOrder(*t1);
+}
+
+
+//https://leetcode.com/problems/unique-binary-search-trees-ii/
+void generateTrees_helper(int n, vector<vector<int>> &permutations, vector<int> one, set<int> numsinper)
+{
+	if (one.size() == n)
+	{
+		permutations.push_back(one);
+		return;
+	}
+
+	for (int i = 1; i <= n; i++)
+	{
+		if (numsinper.find(i) != numsinper.end())
+			continue;
+
+		numsinper.insert(i);
+		one.push_back(i);
+		generateTrees_helper(n, permutations, one, numsinper);
+		one.pop_back();
+		numsinper.erase(i);
+	}
+}
+
+bool are2TreesSame(TreeNode* tree1, TreeNode* tree2)
+{
+	if ((tree1 == NULL && tree2 != NULL) || (tree1 != NULL && tree2 == NULL))
+		return false;	
+
+	if (tree1 == NULL && tree2 == NULL)
+		return true;
+
+	if (tree1->val != tree2->val)
+		return false;
+
+	bool thesame = are2TreesSame(tree1->left, tree2->left);
+	if (thesame)
+		return are2TreesSame(tree1->right, tree2->right);
+	else
+		return false;
+}
+
+vector<TreeNode*> generateTrees_slow(int n)
+{
+	vector<vector<int>> permutations;
+	for (int i = 1; i <= n; i++)
+	{
+		vector<int> one;
+		one.push_back(i);
+		set<int> numsinper;
+		numsinper.insert(i);
+		generateTrees_helper(n, permutations, one, numsinper);
+	}
+
+	vector<TreeNode*> ret;
+	for (int i = 0; i < permutations.size(); i++)
+	{
+		TreeNode* atree = new TreeNode(permutations[i][0]);
+		for (int j = 1; j < permutations[i].size(); j++)
+		{
+			insertTreeNodeValue(atree, permutations[i][j]);
+		}
+
+		bool theduptree = false;
+		for (int k = 0; k < ret.size(); k++)
+		{
+			if (are2TreesSame(atree, ret[k]))
+			{
+				theduptree = true;
+				break;
+			}
+		}
+
+		if (!theduptree)
+			ret.push_back(atree);
+	}
+
+	return ret;
+}
+
+map<pair<int, int>, vector<TreeNode*>> memo;
+
+vector<TreeNode*> build(int lo, int hi) {
+	if (lo > hi) return { nullptr };
+
+	auto key = make_pair(lo, hi);
+	auto it = memo.find(key);
+	if (it != memo.end()) return it->second;
+
+	vector<TreeNode*> res;
+	for (int i = lo; i <= hi; ++i) {
+		for (TreeNode* L : build(lo, i - 1)) {
+			for (TreeNode* R : build(i + 1, hi)) {
+				TreeNode* root = new TreeNode(i);
+				root->left = L;
+				root->right = R;
+				res.push_back(root);
+			}
+		}
+	}
+	memo[key] = res;
+	return memo[key];
+}
+
+vector<TreeNode*> generateTrees(int n) {
+	vector<TreeNode*> ret = build(1, n);
+	return ret;
+}
+
+void testgenerateTrees()
+{
+	generateTrees(3);
+}
+
+//https://leetcode.com/problems/triangle/description/
+void minimumTotal_helper(vector<vector<int>>& triangle, int rowidx, int colidx, int cursum, int &minval)
+{
+	if (rowidx == triangle.size())
+	{
+		if (cursum < minval)
+		{
+			minval = cursum;
+		}
+		return;
+	}
+
+	if (colidx < triangle[rowidx].size())
+	{
+		minimumTotal_helper(triangle, rowidx + 1, colidx, cursum + triangle[rowidx][colidx], minval);
+	}
+
+	if (colidx+1 < triangle[rowidx].size())
+	{
+		minimumTotal_helper(triangle, rowidx + 1, colidx+1, cursum + triangle[rowidx][colidx+1], minval);
+	}
+}
+
+int minimumTotal_slow(vector<vector<int>>& triangle) 
+{
+	int ret = INT_MAX;
+
+	minimumTotal_helper(triangle, 1, 0, triangle[0][0], ret);
+
+	return ret;
+}
+
+// O(n) 空间复杂度的解法
+int minimumTotal(vector<vector<int>>& triangle) {
+	int n = triangle.size();
+	if (n == 0) return 0;
+
+	// 使用一维DP数组存储最小路径和
+	vector<int> dp(triangle.back());
+
+	// 从倒数第二行开始向上处理
+	for (int row = n - 2; row >= 0; row--) {
+		for (int col = 0; col <= row; col++) {
+			// 对于每个位置，选择下方两条路径中的最小值
+			dp[col] = triangle[row][col] + min(dp[col], dp[col + 1]);
+		}
+	}
+
+	return dp[0];
+}
+void testminimumTotal()
+{
+	vector<vector<int>> triangle({ { 2 }, { 3,4 }, { 6,5,7 }, { 4,1,8,3 } });
+	vector<int> a(triangle.back());
+	minimumTotal(triangle);
+}
+
+//https://leetcode.com/problems/word-break/description/
+bool wordBreak(string s, vector<string>& wordDict) 
+{	
+	bool ret = false;
+
+	return ret;
+}
+
+//https://leetcode.com/problems/missing-number/description/
+int missingNumber_ok(vector<int>& nums) 
+{
+	sort(nums.begin(), nums.end());
+
+	for (int i = 0; i < nums.size(); i++)
+	{
+		if (nums[i] != i)
+			return i;
+	}
+
+	return nums.size();
+}
+int missingNumber(vector<int>& nums)
+{
+	int n = nums.size();
+	
+	unsigned int sum = n * (n + 1) / 2, actualsum = 0;
+	for (int i = 0; i < nums.size(); i++)
+		actualsum += nums[i];
+
+	return sum - actualsum;
+}
+void testmissingNumber()
+{
+	vector<int> nums({ 0,1,3 });
+
+	missingNumber(nums);
+}
+//https://leetcode.com/problems/first-bad-version/description/
+int firstBadVersion(int n) 
+{
+	unsigned long long l = 1, r = n;
+	unsigned long long mid = r / 2;
+	
+	while (l <= r )
+	{
+		bool isbad = false;
+		//isbad = isBadVersion(mid);		
+		if (isbad)
+			r = mid - 1;
+		else
+			l = mid + 1;
+		mid = (l + r) / 2;
+	}
+
+	return l;
+}
+
+//
+int numSquares_error(int n)
+{
+	int ret = 1;
+	int squareroot = sqrt(n);
+	int diff = n - pow(squareroot, 2);
+	while (diff > 0)
+	{
+		squareroot = sqrt(diff);
+		diff = diff - pow(squareroot, 2);
+		ret++;
+	}
+	return ret;
+}
+
+int numSquares(int n) {
+	std::queue<int> q;
+	std::unordered_set<int> visited;
+
+	q.push(n);
+	visited.insert(n);
+	int level = 0;
+
+	while (!q.empty()) {
+		int size = q.size();
+		level++;
+
+		for (int i = 0; i < size; i++) {
+			int curr = q.front();
+			q.pop();
+
+			// 尝试减去所有可能的完全平方数
+			for (int j = 1; j * j <= curr; j++) {
+				int next = curr - j * j;
+
+				if (next == 0) {
+					return level;
+				}
+
+				if (visited.find(next) == visited.end()) {
+					visited.insert(next);
+					q.push(next);
+				}
+			}
+		}
+	}
+
+	return level;
+}
+
+void testnumSquares()
+{
+	numSquares(12);
+}
+//https://leetcode.com/problems/move-zeroes/description/
+void moveZeroes_slow(vector<int>& nums) 
+{
+	int i = nums.size() - 1;
+	int n = nums.size() - 1;
+	while (i >= 0)
+	{
+		if (nums[i] == 0)
+		{
+			int k = i; 
+			for (; k < n; k++)
+			{
+				swap(nums[k], nums[k + 1]);
+			}
+			n--;
+		}
+		i--;
+	}
+}
+void moveZeroes(vector<int>& nums) {
+	int j = 0;
+	for (int i = 0; i < nums.size(); i++)
+	{
+		if (nums[i] != 0)
+		{
+			swap(nums[i], nums[j]);
+			j++;
+		}		
+	}
+}
+
+void testmoveZeroes()
+{
+	vector<int> nums({ 1,0,2,3,0,});
+	moveZeroes(nums);
+}
+
+//https://leetcode.com/problems/majority-element-ii/description/
+vector<int> majorityElemen_slow(vector<int>& nums) 
+{
+	map<int, int> numapperance;
+	vector<int> ret;
+	int majcount = nums.size() / 3;
+	for (auto i : nums)
+	{
+		if (numapperance.find(i) == numapperance.end())
+		{
+			numapperance[i] = 1;
+		}
+		else
+		{
+			numapperance[i]++;			
+		}
+
+		if (numapperance[i] == majcount + 1)
+			ret.push_back(i);
+	}
+
+	return ret;
+}
+
+vector<int> majorityElement(vector<int>& nums)
+{
+	//摩尔投票法（Boyer-Moore Voting Algorithm）
+
+	vector<int> ret;
+	int count1 = 0, count2 = 0;
+	int candidate1 = INT_MAX, candidate2 = INT_MAX;
+	int majcount = nums.size() / 3;
+	for (int i : nums)
+	{
+		// 要先判断 (candidate1 == i)， 然后再判断  (count1 == 0)，如果先判断  (count1 == 0)，
+		// 那么在  (count1 == 0) && (candidate2 == i) 的情况下，此时应该是 count2++，但却错误的走到了  (count1 == 0) 分支
+		if (candidate1 == i)
+		{
+			count1++;
+		}
+		else if (candidate2 == i)
+		{
+			count2++;
+		}
+		else if (count1 == 0)
+		{
+			count1++;
+			candidate1 = i;
+		}
+		else if (count2 == 0)
+		{
+			count2++;
+			candidate2 = i;
+		}
+		else
+		{
+			count1--;
+			count2--;
+		}
+	}
+
+	count1 = 0;
+	count2 = 0;
+	for (int i : nums)
+	{
+		if (i == candidate1)
+			count1++;
+		else if (i == candidate2)
+			count2++;
+	}
+
+	if (count1 > majcount)
+		ret.push_back(candidate1);
+
+	if (count2 > majcount)
+		ret.push_back(candidate2);
+
+	return ret;
+}
+
+void testmajorityElement()
+{
+	vector<int> nums({ 2,1,1,3,1,4,5,6 });
+	majorityElement(nums);
+}
+
+//https://leetcode.com/problems/minimum-height-trees/
+vector<int> findMinHeightTrees(int n, vector<vector<int>>& edges)
+{
+	vector<int> ret;
+	if (n == 1)
+	{
+		ret.push_back(0);
+		return ret;
+	}
+
+	map<int, set<int>> nodeadj;
+	map<int, int> nodeedges;
+	for (auto eachedge : edges)
+	{
+		int u = eachedge[0];
+		int v = eachedge[1];
+		if (nodeadj.find(u) == nodeadj.end())
+		{
+			nodeadj[u] = set<int>();
+			nodeedges[u] = 0;
+		}
+		if (nodeadj.find(v) == nodeadj.end())
+		{
+			nodeadj[v] = set<int>();
+			nodeedges[v] = 0;
+		}
+
+		nodeadj[u].insert(v);
+		nodeadj[v].insert(u);
+		nodeedges[u]++;
+		nodeedges[v]++;
+	}
+		
+	list<int> leafnodes;	
+	auto itor(nodeadj.begin());
+	while (itor != nodeadj.end())
+	{
+		if (itor->second.size() == 1)
+			leafnodes.push_back(itor->first);
+
+		itor++;
+	}
+
+	int remainingnodes = n;
+	while (remainingnodes > 2)
+	{
+		int leaves = leafnodes.size();
+		remainingnodes -= leaves;
+		for (int i = 0; i < leaves; i++)
+		{
+			int node = leafnodes.front();
+			leafnodes.pop_front();
+			nodeedges[node]--;
+			for (auto adj : nodeadj[node])
+			{
+				nodeadj[adj].erase(node);
+				nodeedges[adj]--;
+				if (nodeedges[adj] == 1)
+				{
+					leafnodes.push_back(adj);
+				}
+			}			
+		}
+	}
+
+	for (auto node : leafnodes)
+		ret.push_back(node);
+
+	return ret;
+}
+
+void testfindMinHeightTrees()
+{
+	vector<vector<int>> edges({ {3,0},{3,1},{3,2},{3,4},{5,4} });
+	int n = 6;
+
+	findMinHeightTrees(n, edges);
+}
+
+//https://leetcode.com/problems/maximum-product-of-word-lengths/description/
+int maxProduct_slow(vector<string>& words) 
+{
+	int maxprod = 0;
+	for (int i = 0; i < words.size()-1; i++)
+	{
+		vector<bool> charmark(26, 0);
+		for (int c = 0; c < words[i].size(); c++)
+		{
+			charmark[words[i][c] - 'a'] = true;
+		}
+		
+		for (int j = i + 1; j < words.size(); j++)
+		{
+			bool isdup = false;
+			for (int c = 0; c < words[j].size(); c++)
+			{
+				if (charmark[words[j][c] - 'a'])
+				{
+					isdup = true;
+					break;
+				}
+			}
+
+			if (!isdup)
+			{
+				maxprod = max((size_t)maxprod, words[i].size() * words[j].size());
+			}
+		}
+	}
+
+	return maxprod;
+}
+
+int maxProduct(vector<string>& words)
+{
+	vector<unsigned int> wordmask(words.size(), 0);
+	int maxprod = 0;
+	for (int i = 0; i < words.size(); i++)
+	{
+		for (char c : words[i])
+		{
+			wordmask[i] |= 1 << (c - 'a');
+		}
+	}
+
+	for (int i = 0; i < words.size()-1; i++)
+	{
+		for (int j = i + 1; j < words.size(); j++)
+		{
+			if ((wordmask[i] & wordmask[j]) == 0)
+				maxprod = max((size_t)maxprod, words[i].size() * words[j].size());
+		}
+	}
+
+	return maxprod;
+}
+
+void testmaxProduct2()
+{
+	vector<string> words({ "a","ab","abc","d","cd","bcd","abcd" });
+	maxProduct(words);
+}
+
+//https://leetcode.com/problems/wiggle-sort-ii/description/
+// 2,3,1,3,1,2
+// 1 1 2 2 3 3
+// 3 3 2 2 1 1
+// 2 3 2 3 
+void wiggleSort(vector<int>& nums) {
+	int n = nums.size();
+	vector<int> sorted(nums);
+	sort(sorted.begin(), sorted.end());
+
+	// 虚拟索引映射：将索引映射到排序后的数组
+	// 目标是让较大的元素放在奇数位置，较小的放在偶数位置
+	auto idx = [&](int i) {
+		return (1 + 2 * i) % (n | 1);
+		};
+
+	// 从后向前填充，避免相同元素相邻
+	for (int i = 0; i < n; i++) {
+		nums[idx(i)] = sorted[n - 1 - i];
+	}
+}
+void testwiggleSort()
+{
+	vector<int> nums({ 1,3,2,2,3,1 });
+	wiggleSort(nums);
+}
 
 int main()
 {
-	
-	testbuildTree();
+	testwiggleSort();
 	return 0;
 }
