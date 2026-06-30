@@ -17351,14 +17351,150 @@ void wiggleSort(vector<int>& nums) {
 		nums[idx(i)] = sorted[n - 1 - i];
 	}
 }
+
 void testwiggleSort()
 {
 	vector<int> nums({ 1,3,2,2,3,1 });
 	wiggleSort(nums);
 }
 
+//https://leetcode.com/problems/top-k-frequent-elements
+vector<int> topKFrequent_slow(vector<int>& nums, int k) 
+{
+	vector<int> ret;
+	map<int, int> numfreq;
+	for (int i : nums)
+	{
+		numfreq[i]++;
+	}
+	sort(nums.begin(), nums.end(),
+		[&](int a, int b)
+		{
+			if (numfreq[a] == numfreq[b])
+				return a > b;
+			return numfreq[a] > numfreq[b];
+		});
+
+	int n = 0;
+	for (int i = 1; i <= k; i++)
+	{
+		ret.push_back(nums[n]);
+		n += numfreq[nums[n]];
+	}
+
+	return ret;
+}
+
+vector<int> topKFrequent(vector<int>& nums, int k) {
+	// 1. 统计每个元素的出现频率
+	unordered_map<int, int> freqMap;
+	for (int num : nums) {
+		freqMap[num]++;
+	}
+
+	// 2. 使用最小堆（优先队列），堆顶是最小频率
+	// pair<频率, 元素值>
+	auto cmp = [](const pair<int, int>& a, const pair<int, int>& b) -> bool {
+		return a.first > b.first;  // 最小堆
+		};
+	priority_queue<pair<int, int>, vector<pair<int, int>>, decltype(cmp)> minHeap(cmp);
+
+	// 3. 遍历哈希表，维护大小为 k 的最小堆
+	for (auto& [num, freq] : freqMap) {
+		minHeap.push({ freq, num });
+		if (minHeap.size() > k) {
+			minHeap.pop();  // 移除频率最小的
+		}
+	}
+
+	// 4. 提取结果
+	vector<int> result;
+	while (!minHeap.empty()) {
+		result.push_back(minHeap.top().second);
+		minHeap.pop();
+	}
+
+	return result;
+}
+
+void testtopKFrequent()
+{
+	vector<int> nums({ 1,2,1,2,1,2,3,1,3,2 });
+	topKFrequent(nums, 2);
+}
+
+//https://leetcode.com/problems/delete-node-in-a-linked-list/
+void deleteNode_slow(ListNode* node)
+{
+	ListNode* nodenext = node->next;
+	while (nodenext != nullptr && nodenext->next != nullptr)
+	{
+		node->val = nodenext->val;
+		node = nodenext;
+		nodenext = nodenext->next;
+	}
+
+	node->val = nodenext->val;
+	node->next = nullptr;
+}
+
+void deleteNode(ListNode* node)
+{
+	node->val = node->next->val;
+	node->next = node->next->next;
+}
+
+//https://leetcode.com/problems/course-schedule-ii/description/
+vector<int> findOrder(int numCourses, vector<vector<int>>& prerequisites) 
+{
+	vector<int> courseindegree(numCourses);
+	vector<vector<int>> coursefollowing(numCourses);
+	for (auto each_pre : prerequisites)
+	{
+		int u = each_pre[0];
+		int v = each_pre[1];
+		courseindegree[u]++;
+		coursefollowing[v].push_back(u);
+	}
+
+	list<int> coursetopsort;
+	for (int course = 0; course < numCourses; course++)
+	{
+		if (courseindegree[course] == 0)
+			coursetopsort.push_back(course);
+	}
+
+	vector<int> ret;
+	while (coursetopsort.size() > 0)
+	{
+		int u = coursetopsort.front();
+		coursetopsort.pop_front();
+		ret.push_back(u);
+		for (auto v : coursefollowing[u])
+		{
+			courseindegree[v]--;
+			if (courseindegree[v] == 0)
+			{
+				coursetopsort.push_back(v);
+			}
+		}
+	}
+	if (ret.size() != numCourses)
+		ret.clear();
+
+	return ret;
+}
+
+void testfindOrder()
+{
+	vector <vector<int>> c({ {1,0},{1,2},{0,1} });
+	
+	findOrder(3, c);
+}
 int main()
 {
-	testwiggleSort();
+	cppversion();
+
+	testfindOrder();
 	return 0;
 }
