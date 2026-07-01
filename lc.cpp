@@ -17491,6 +17491,88 @@ void testfindOrder()
 	
 	findOrder(3, c);
 }
+
+//https://leetcode.com/problems/valid-anagram/description/
+bool isAnagram(string s, string t) 
+{
+	if (s.size() != t.size())
+		return false;
+
+	vector<int> charmark(26, 0);
+	for (char c : s)
+	{
+		charmark[c - 'a']++;
+	}
+
+	for (char c : t)
+	{
+		charmark[c - 'a']--;
+	}
+
+	for (int i : charmark)
+	{
+		if (i != 0)
+			return false;
+	}
+
+	return true;
+}
+
+//https://leetcode.com/problems/binary-tree-paths/description/
+void binaryTreePaths_helper(TreeNode* root, string path, vector<string> &ret)
+{
+	if (path.size() > 0)
+		path.append("->" + std::to_string(root->val));
+	else
+		path.append(std::to_string(root->val));
+
+	if (!root->left && !root->right)
+	{
+		ret.push_back(path);
+		return;
+	}
+
+	if (root->left)
+		binaryTreePaths_helper(root->left, path, ret);
+
+	if (root->right)
+		binaryTreePaths_helper(root->right, path, ret);
+}
+
+vector<string> binaryTreePaths(TreeNode* root) 
+{
+	vector<string> ret;
+	string path;
+
+	binaryTreePaths_helper(root, path, ret);
+
+	return ret;
+}
+
+//https://leetcode.com/problems/add-digits/
+int addDigits_helper(int num)
+{
+	int sum = 0;
+	while (num > 0)
+	{
+		sum += num % 10;
+		num /= 10;
+	}
+
+	return sum;
+}
+
+int addDigits(int num)
+{
+	int sum = addDigits_helper(num);
+	while (sum >= 10)
+	{
+		sum = addDigits_helper(sum);
+	}
+
+	return sum;
+}
+
 int main()
 {
 	cppversion();
